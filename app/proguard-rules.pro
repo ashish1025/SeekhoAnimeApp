@@ -1,21 +1,64 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# -----------------------------
+# Kotlin Metadata (always keep)
+# -----------------------------
+-keep class kotlin.Metadata { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# -----------------------------
+# AndroidX Navigation
+# -----------------------------
+-keep class androidx.navigation.** { *; }
+-dontwarn androidx.navigation.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# -----------------------------
+# Retrofit + Gson
+# -----------------------------
+# Gson reflection needs model fields retained
+-keep class com.example.seekhoanimeapp.data.dto.** { *; }
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Retrofit / OkHttp support
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn retrofit2.**
+
+# -----------------------------
+# Room Database
+# -----------------------------
+# Keep entities/DAOs
+
+
+# -----------------------------
+# Glide (Image loading)
+# -----------------------------
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+
+# -----------------------------
+# Media3 / ExoPlayer
+# -----------------------------
+-keep class androidx.media3.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }
+-dontwarn androidx.media3.**
+-dontwarn com.google.android.exoplayer2.**
+
+# -----------------------------
+# Android Framework
+# -----------------------------
+-keepclassmembers class * extends android.app.Activity {
+    public void *(android.view.View);
+}
+-keepclassmembers class * extends android.app.Activity {
+    public void *(android.os.Bundle);
+}
+
+-keepclassmembers class * extends androidx.fragment.app.Fragment {
+    public void *(android.os.Bundle);
+}
+
+# Keep Parcelable (Room / Bundles)
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
