@@ -111,3 +111,6 @@ git clone https://github.com/ashish1025/SeekhoAnimeApp.git
 4. offline sync with roomDB
 5. Improve UI with animations
 
+
+![img.png](img.png)
+
