@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#D1D1D1"
+        android:pathData="M64,0
+                         A64,64 0 1,1 63.999,0z" />
+
+    <!-- Star shape or icon detail -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M64,20
+                         L75,50
+                         L108,50
+                         L80,68
+                         L89,96
+                         L64,78
+                         L39,96
+                         L48,68
+                         L20,50
+                         L53,50
+                         Z" />
+
+</vector>
