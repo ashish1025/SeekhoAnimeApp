@@ -114,3 +114,4 @@ git clone https://github.com/ashish1025/SeekhoAnimeApp.git
 
 ![img.png](img.png)
 
+![img_1.png](img_1.png)
