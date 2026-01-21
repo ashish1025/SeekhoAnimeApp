@@ -37,6 +37,13 @@ A simple Android app built using the **Jikan API** to display popular anime list
 - Room database for local storage
 - LiveData + ViewModel
 
+#### Room database for offline support.
+- Data is stored locally
+- App uses local data first
+- Avoids multiple API calls
+- Works offline (no network)
+- Syncs with API only when needed
+
 ---
 
 ## 📡 APIs Used
@@ -60,7 +67,7 @@ https://api.jikan.moe/v4/anime/{anime_id}
 ### Libraries Used
 - Retrofit
 - Glide
-- LiveData
+- StateFlow
 - Coroutines
 - Navigation Component
 - Media3 (ExoPlayer)
@@ -88,9 +95,7 @@ https://api.jikan.moe/v4/anime/{anime_id}
 
 ## ❗ Known Limitations
 
-- Offline sync is basic (no complex conflict resolution)
 - Cast list may not show if API doesn’t provide cast info
-- Trailer playback depends on YouTube availability
 
 ---
 
@@ -108,7 +113,6 @@ git clone https://github.com/ashish1025/SeekhoAnimeApp.git
 1. Add Search
 2. Add Pagination
 3. Add Favorites
-4. offline sync with roomDB
 5. Improve UI with animations
 
 
