@@ -7,8 +7,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,6 +21,7 @@ import com.example.seekhoanimeapp.data.local.entity.AnimeEntity
 import com.example.seekhoanimeapp.data.network.dto.AnimeDto
 import com.example.seekhoanimeapp.di.DependencyProvider
 import com.example.seekhoanimeapp.utils.UiState
+import kotlinx.coroutines.launch
 
 class AnimeListFragment : Fragment() {
 
@@ -46,7 +51,6 @@ class AnimeListFragment : Fragment() {
         rvAnime.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = AnimeListAdapter(emptyList()) { anime ->
-            hideListUI()
             val bundle = Bundle().apply {
                 putInt("animeId", anime.animeId)
             }
@@ -57,55 +61,74 @@ class AnimeListFragment : Fragment() {
 
         viewModel = ViewModelProvider(
             this,
-            DependencyProvider.provideViewModelFactory(this.requireContext())
+            DependencyProvider.provideViewModelFactory(-1 ,this.requireContext())
         )[AnimeListViewModel::class.java]
+        observeAnimeList()
+        btnRetry.setOnClickListener {
+            viewModel.retry()
+        }
 
-        viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> showLoading()
-                is UiState.Success<*> -> {
-                    showList()
-                    @Suppress("UNCHECKED_CAST")
-                    adapter.updateData(state.data as List<AnimeEntity>)
+    }
+
+    private fun observeAnimeList() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is UiState.Loading -> {
+                            showLoading(progressBar, rvAnime, tvError, btnRetry)
+                        }
+
+                        is UiState.Success -> {
+                            adapter.updateData(state.data)
+                            showContent(progressBar, rvAnime, tvError, btnRetry)
+                        }
+
+                        is UiState.Error -> {
+                            tvError.text = state.message
+                            showError(progressBar, rvAnime, tvError, btnRetry)
+                        }
+                    }
                 }
-                is UiState.Error -> showError(state.message)
             }
         }
-
-        btnRetry.setOnClickListener {
-            viewModel.loadTopAnime()
-        }
-
-        viewModel.loadTopAnime()
+    }
+    private fun showLoading(
+        progressBar: ProgressBar,
+        rvAnime: RecyclerView,
+        tvError: TextView,
+        btnRetry: Button
+    ) {
+        progressBar.isVisible = true
+        rvAnime.isVisible = false
+        tvError.isVisible = false
+        btnRetry.isVisible = false
     }
 
-    private fun showLoading() {
-        progressBar.visibility = View.VISIBLE
-        rvAnime.visibility = View.GONE
-        tvError.visibility = View.GONE
-        btnRetry.visibility = View.GONE
+    private fun showContent(
+        progressBar: ProgressBar,
+        rvAnime: RecyclerView,
+        tvError: TextView,
+        btnRetry: Button
+    ) {
+        progressBar.isVisible = false
+        rvAnime.isVisible = true
+        tvError.isVisible = false
+        btnRetry.isVisible = false
     }
 
-    private fun showList() {
-        progressBar.visibility = View.GONE
-        rvAnime.visibility = View.VISIBLE
-        tvError.visibility = View.GONE
-        btnRetry.visibility = View.GONE
+    private fun showError(
+        progressBar: ProgressBar,
+        rvAnime: RecyclerView,
+        tvError: TextView,
+        btnRetry: Button
+    ) {
+        progressBar.isVisible = false
+        rvAnime.isVisible = false
+        tvError.isVisible = true
+        btnRetry.isVisible = true
     }
 
-    private fun showError(message: String) {
-        progressBar.visibility = View.GONE
-        rvAnime.visibility = View.GONE
-        tvError.visibility = View.VISIBLE
-        btnRetry.visibility = View.VISIBLE
-        tvError.text = message
-    }
 
-    private fun hideListUI() {
-        rvAnime.visibility = View.GONE
-        progressBar.visibility = View.GONE
-        tvError.visibility = View.GONE
-        btnRetry.visibility = View.GONE
-        adapter.updateData(emptyList())
-    }
+
 }

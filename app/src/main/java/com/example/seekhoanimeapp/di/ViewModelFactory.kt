@@ -9,7 +9,8 @@ import com.example.seekhoanimeapp.ui.anime_list.AnimeListViewModel
 
 class ViewModelFactory(
     private val animeListRepository: AnimeListRepository,
-    private val animeDetailRepository: AnimeDetailRepository
+    private val animeDetailRepository: AnimeDetailRepository,
+    private val animeId: Int
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -20,7 +21,7 @@ class ViewModelFactory(
             }
 
             modelClass.isAssignableFrom(AnimeDetailViewModel::class.java) -> {
-                AnimeDetailViewModel(animeDetailRepository) as T
+                AnimeDetailViewModel(animeId,animeDetailRepository) as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class")

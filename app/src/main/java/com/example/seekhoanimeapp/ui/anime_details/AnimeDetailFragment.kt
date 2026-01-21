@@ -6,23 +6,24 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.example.seekhoanimeapp.R
-import com.example.seekhoanimeapp.data.network.dto.AnimeDetailDto
+import com.example.seekhoanimeapp.data.local.entity.AnimeEntity
 import com.example.seekhoanimeapp.databinding.FragmentAnimeDetailBinding
 import com.example.seekhoanimeapp.di.DependencyProvider
 import com.example.seekhoanimeapp.utils.UiState
-import androidx.core.net.toUri
-import androidx.core.graphics.drawable.toDrawable
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class AnimeDetailFragment : Fragment() {
 
@@ -31,10 +32,17 @@ class AnimeDetailFragment : Fragment() {
     private var _binding: FragmentAnimeDetailBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var player: ExoPlayer
+    private lateinit var playerView: PlayerView
     private lateinit var viewModel: AnimeDetailViewModel
 
-    private var player: ExoPlayer? = null
-    private lateinit var playerView: PlayerView
+
+
+    private val animeId: Int by lazy {
+        requireArguments().getInt("animeId")
+    }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,133 +55,86 @@ class AnimeDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val animeId = arguments?.getInt("animeId") ?: return
-
         viewModel = ViewModelProvider(
             this,
-            DependencyProvider.provideViewModelFactory(this.requireContext())
+            DependencyProvider.provideViewModelFactory(animeId, this.requireContext())
         )[AnimeDetailViewModel::class.java]
-
-        viewModel.loadAnimeDetail(animeId)
-        observeAnimeDetails()
-
-
+        collectUiState()
     }
 
-    private fun observeAnimeDetails() {
-        viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                }
-                is UiState.Success -> {
-                    binding.progressBar.visibility = View.GONE
-                    bindData(state.data)
-                }
-                is UiState.Error -> {
-                    binding.progressBar.visibility = View.GONE
+    private fun collectUiState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collectLatest { state ->
+                when (state) {
+                    is UiState.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
+                    is UiState.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        bindData(state.data)
+                    }
+
+                    is UiState.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        Log.e(TAG, state.message, state.throwable)
+                    }
                 }
             }
         }
     }
 
     @SuppressLint("SetTextI18n")
-    private fun bindData(data: AnimeDetailDto) {
+    private fun bindData(data: AnimeEntity) {
 
         binding.tvTitle.text = data.title
         binding.tvSynopsis.text = data.synopsis ?: "No synopsis available"
-
-        binding.tvGenres.text = data.genres.joinToString(", ") { it.name }
-
-        val castText = data.characters?.data?.take(5)
-            ?.joinToString(", ") { it.name } ?: "No cast available"
-
-        binding.tvCast.text = castText
-
+        binding.tvGenres.text = data.genres ?: "No genres available"
         binding.tvEpisodes.text = "Episodes: ${data.episodes ?: "NA"}"
-        binding.tvRating.text = "Rating: ${data.score ?: "NA"}"
-        val trailerUrl = data.trailer?.url
-        val youtubeUrl = data.trailer?.youtube_id
+        binding.tvRating.text = "Rating: ${data.rating ?: "NA"}"
+
         playerView = binding.playerView
 
+        when {
+            !data.trailerUrl.isNullOrEmpty() -> {
+                binding.imgPoster.visibility = View.GONE
+                playerView.visibility = View.VISIBLE
+                initializePlayer(data.trailerUrl)
+            }
 
-        if (!trailerUrl.isNullOrEmpty()) {
-            Log.d(TAG,"Trailer URL: $trailerUrl")
-            binding.imgPoster.visibility = View.GONE
-            playerView.visibility = View.VISIBLE
-            initializePlayer(trailerUrl)
-        }
-        else  if (!youtubeUrl.isNullOrEmpty()) {
-            binding.imgPoster.visibility = View.GONE
-            binding.playerView.visibility = View.VISIBLE
-            initializeYoutubePlayer(youtubeUrl)
-        }
-        else {
-            playerView.visibility = View.GONE
-            binding.imgPoster.visibility = View.VISIBLE
-            Log.d(TAG,"poster available URL: ${data.images.jpg.image_url}")
-
-            Glide.with(requireContext())
-                .load(data.images.jpg.image_url)
-                .placeholder(R.drawable.ic_anime_placeholder)
-                .error(R.drawable.ic_anime_placeholder)
-                .fallback(R.drawable.ic_anime_placeholder)
-                .into(binding.imgPoster)
-
+            else -> {
+                showPoster(data.imageUrl)
+            }
         }
     }
 
-    private fun initializeYoutubePlayer(youtubeUrl: String) {
-        binding.imgPoster.visibility = View.GONE
-        binding.playerView.visibility = View.VISIBLE
-
-        // Thumbnail URL
-        val thumbnailUrl = "https://img.youtube.com/vi/$youtubeUrl/hqdefault.jpg"
+    private fun showPoster(imageUrl: String?) {
+        binding.playerView.visibility = View.GONE
+        binding.imgPoster.visibility = View.VISIBLE
 
         Glide.with(requireContext())
-            .asBitmap()
-            .load(thumbnailUrl)
+            .load(imageUrl)
             .placeholder(R.drawable.ic_anime_placeholder)
             .error(R.drawable.ic_anime_placeholder)
-            .into(object : CustomTarget<Bitmap>() {
-                @SuppressLint("UnsafeOptInUsageError")
-                override fun onResourceReady(
-                    resource: Bitmap,
-                    transition: com.bumptech.glide.request.transition.Transition<in Bitmap>?
-                ) {
-                    binding.playerView.defaultArtwork =
-                        resource.toDrawable(resources)
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-            })
-        binding.playerView.setOnClickListener {
-            val intent = Intent(
-                Intent.ACTION_VIEW,
-                "https://www.youtube.com/watch?v=$youtubeUrl".toUri()
-            )
-            startActivity(intent)
-        }
+            .into(binding.imgPoster)
     }
+
 
     private fun initializePlayer(videoUrl: String) {
-        player = ExoPlayer.Builder(requireContext()).build().also { exoPlayer ->
-            playerView.player = exoPlayer
+        player = ExoPlayer.Builder(requireContext()).build()
+        playerView.player = player
 
-            val mediaItem = MediaItem.fromUri(videoUrl)
-            exoPlayer.setMediaItem(mediaItem)
-
-            exoPlayer.prepare()
-            exoPlayer.playWhenReady = true
-        }
+        player.setMediaItem(MediaItem.fromUri(videoUrl))
+        player.prepare()
+        player.playWhenReady = true
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
-        player?.release()
-        player = null
+        if (::player.isInitialized) {
+            player.release()
+        }
         _binding = null
     }
 }
+

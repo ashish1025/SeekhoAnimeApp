@@ -1,6 +1,9 @@
 package com.example.seekhoanimeapp.di
 
 import android.content.Context
+import com.example.seekhoanimeapp.data.local.db.AnimeDao
+import com.example.seekhoanimeapp.data.local.db.AppDatabase
+import com.example.seekhoanimeapp.data.local.db.DatabaseProvider
 
 import com.example.seekhoanimeapp.data.repository.AnimeDetailRepository
 import com.example.seekhoanimeapp.data.repository.AnimeListRepository
@@ -12,26 +15,27 @@ object DependencyProvider {
     private fun provideApiService(): ApiService {
         return ApiClient.apiService
     }
-//    private fun provideAnimeDatabase(context: Context): AnimeDatabase {
-//        return AnimeDatabase.getInstance(context)
-//    }
-//    private fun provideAnimeDao(context: Context): AnimeDao {
-//        return provideAnimeDatabase(context).animeDao()
-//    }
+    private fun provideAnimeDatabase(context: Context): AppDatabase {
+        return DatabaseProvider.getDatabase(context)
+    }
+    private fun provideAnimeDao(context: Context): AnimeDao {
+        return provideAnimeDatabase(context).animeDao()
+    }
 
 
     fun provideAnimeListRepository(context: Context): AnimeListRepository {
-        return AnimeListRepository(provideApiService())
+        return AnimeListRepository(provideAnimeDao(context),provideApiService())
     }
 
-    fun provideAnimeDetailRepository(): AnimeDetailRepository {
-        return AnimeDetailRepository(provideApiService())
+    fun provideAnimeDetailRepository(context: Context): AnimeDetailRepository {
+        return AnimeDetailRepository(provideAnimeDao(context),provideApiService())
     }
 
-    fun provideViewModelFactory(context: Context): ViewModelFactory {
+    fun provideViewModelFactory(animeId: Int,context: Context): ViewModelFactory {
         return ViewModelFactory(
             provideAnimeListRepository(context),
-            provideAnimeDetailRepository()
+            provideAnimeDetailRepository(context),
+            animeId
         )
     }
 }

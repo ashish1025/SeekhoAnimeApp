@@ -1,34 +1,65 @@
 package com.example.seekhoanimeapp.ui.anime_list
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.seekhoanimeapp.data.local.entity.AnimeEntity
-import com.example.seekhoanimeapp.data.network.dto.AnimeDto
 import com.example.seekhoanimeapp.data.repository.AnimeListRepository
 import com.example.seekhoanimeapp.utils.UiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 class AnimeListViewModel(
     private val repository: AnimeListRepository
 ) : ViewModel() {
 private val TAG = "AnimeListViewModel"
-    private val _uiState = MutableLiveData<UiState<List<AnimeEntity>>>()
-    val uiState: LiveData<UiState<List<AnimeEntity>>> = _uiState
 
-    fun loadTopAnime() {
-        Log.d(TAG, "loadTopAnime called")
+    private val _uiState =
+        MutableStateFlow<UiState<List<AnimeEntity>>>(UiState.Loading)
+
+    val uiState: StateFlow<UiState<List<AnimeEntity>>> =
+        _uiState.asStateFlow()
+
+    init {
+        observeAnime()
+        syncIfNeeded()
+    }
+
+    private fun observeAnime() {
         viewModelScope.launch {
-            _uiState.postValue(UiState.Loading)
+            repository.getAnimeList().collect { list ->
+                _uiState.value = UiState.Success(list)
+            }
+        }
+    }
 
+
+
+    private fun syncIfNeeded() {
+        viewModelScope.launch {
             try {
-                val animeList = repository.syncAnimeIfNeeded()
-                Log.d(TAG, "Anime list: $animeList")
-                _uiState.postValue(UiState.Success(animeList as? List<AnimeEntity> ?: emptyList()))
+                _uiState.value = UiState.Loading
+                repository.syncAnimeIfNeeded()
             } catch (e: Exception) {
-                _uiState.postValue(UiState.Error(e.message ?: "Unknown error"))
+                _uiState.value = UiState.Error(
+                    message = e.message ?: "Something went wrong",
+                    throwable = e
+                )
+            }
+        }
+    }
+
+    fun retry() {
+        viewModelScope.launch {
+            try {
+                _uiState.value = UiState.Loading
+                repository.forceSync()
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(
+                    message = e.message ?: "Something went wrong",
+                    throwable = e
+                )
             }
         }
     }
