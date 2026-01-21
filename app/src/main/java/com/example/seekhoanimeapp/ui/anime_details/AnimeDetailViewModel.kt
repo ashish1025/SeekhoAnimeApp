@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.seekhoanimeapp.data.dto.AnimeDetailDto
+import com.example.seekhoanimeapp.data.network.dto.AnimeDetailDto
 import com.example.seekhoanimeapp.data.repository.AnimeDetailRepository
 import com.example.seekhoanimeapp.utils.UiState
 import kotlinx.coroutines.launch

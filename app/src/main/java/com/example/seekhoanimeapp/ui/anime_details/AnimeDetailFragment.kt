@@ -3,26 +3,21 @@ package com.example.seekhoanimeapp.ui.anime_details
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Bundle
-import android.transition.Transition
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaItem
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.example.seekhoanimeapp.R
-import com.example.seekhoanimeapp.data.dto.AnimeDetailDto
+import com.example.seekhoanimeapp.data.network.dto.AnimeDetailDto
 import com.example.seekhoanimeapp.databinding.FragmentAnimeDetailBinding
 import com.example.seekhoanimeapp.di.DependencyProvider
 import com.example.seekhoanimeapp.utils.UiState
@@ -57,7 +52,7 @@ class AnimeDetailFragment : Fragment() {
 
         viewModel = ViewModelProvider(
             this,
-            DependencyProvider.provideViewModelFactory()
+            DependencyProvider.provideViewModelFactory(this.requireContext())
         )[AnimeDetailViewModel::class.java]
 
         viewModel.loadAnimeDetail(animeId)

@@ -1,32 +1,28 @@
 package com.example.seekhoanimeapp.ui.anime_list
 
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.seekhoanimeapp.R
-import com.example.seekhoanimeapp.data.dto.AnimeDto
+import com.example.seekhoanimeapp.data.local.entity.AnimeEntity
+import com.example.seekhoanimeapp.data.network.dto.AnimeDto
 import com.example.seekhoanimeapp.databinding.ItemAnimeBinding
 class AnimeListAdapter(
-    private var animeList: List<AnimeDto>,
-    private val onItemClick: (AnimeDto) -> Unit
+    private var animeList: List<AnimeEntity>,
+    private val onItemClick: (AnimeEntity) -> Unit
 ) : RecyclerView.Adapter<AnimeListAdapter.AnimeViewHolder>() {
 
     inner class AnimeViewHolder(
         private val binding: ItemAnimeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(anime: AnimeDto) {
+        fun bind(anime: AnimeEntity) {
             binding.tvTitle.text = anime.title
             binding.tvEpisodes.text = "Episodes: ${anime.episodes ?: "N/A"}"
-            binding.tvRating.text = "⭐ ${anime.score ?: "N/A"}"
+            binding.tvRating.text = "⭐ ${anime.rating ?: "N/A"}"
 
             Glide.with(binding.ivPoster.context)
-                .load(anime.images.jpg.image_url)
+                .load(anime.imageUrl)
                 .into(binding.ivPoster)
 
             binding.root.setOnClickListener {
@@ -35,7 +31,7 @@ class AnimeListAdapter(
         }
     }
 
-    fun updateData(newList: List<AnimeDto>) {
+    fun updateData(newList: List<AnimeEntity>) {
         animeList = newList
         notifyDataSetChanged()
     }

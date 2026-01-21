@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.seekhoanimeapp.data.repository.AnimeDetailRepository
 import com.example.seekhoanimeapp.data.repository.AnimeListRepository
-import com.example.seekhoanimeapp.network.ApiClient.apiService
 import com.example.seekhoanimeapp.ui.anime_details.AnimeDetailViewModel
 import com.example.seekhoanimeapp.ui.anime_list.AnimeListViewModel
 

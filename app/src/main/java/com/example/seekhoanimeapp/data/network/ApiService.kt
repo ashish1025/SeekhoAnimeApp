@@ -1,7 +1,7 @@
-package com.example.seekhoanimeapp.network
+package com.example.seekhoanimeapp.data.network
 
-import com.example.seekhoanimeapp.data.dto.AnimeDetailResponse
-import com.example.seekhoanimeapp.data.dto.TopAnimeResponse
+import com.example.seekhoanimeapp.data.network.dto.AnimeDetailResponse
+import com.example.seekhoanimeapp.data.network.dto.TopAnimeResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

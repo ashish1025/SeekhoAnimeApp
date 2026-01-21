@@ -13,7 +13,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.seekhoanimeapp.R
-import com.example.seekhoanimeapp.data.dto.AnimeDto
+import com.example.seekhoanimeapp.data.local.entity.AnimeEntity
+import com.example.seekhoanimeapp.data.network.dto.AnimeDto
 import com.example.seekhoanimeapp.di.DependencyProvider
 import com.example.seekhoanimeapp.utils.UiState
 
@@ -47,7 +48,7 @@ class AnimeListFragment : Fragment() {
         adapter = AnimeListAdapter(emptyList()) { anime ->
             hideListUI()
             val bundle = Bundle().apply {
-                putInt("animeId", anime.mal_id)
+                putInt("animeId", anime.animeId)
             }
             findNavController().navigate(R.id.action_list_to_detail, bundle)
         }
@@ -56,7 +57,7 @@ class AnimeListFragment : Fragment() {
 
         viewModel = ViewModelProvider(
             this,
-            DependencyProvider.provideViewModelFactory()
+            DependencyProvider.provideViewModelFactory(this.requireContext())
         )[AnimeListViewModel::class.java]
 
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
@@ -65,7 +66,7 @@ class AnimeListFragment : Fragment() {
                 is UiState.Success<*> -> {
                     showList()
                     @Suppress("UNCHECKED_CAST")
-                    adapter.updateData(state.data as List<AnimeDto>)
+                    adapter.updateData(state.data as List<AnimeEntity>)
                 }
                 is UiState.Error -> showError(state.message)
             }

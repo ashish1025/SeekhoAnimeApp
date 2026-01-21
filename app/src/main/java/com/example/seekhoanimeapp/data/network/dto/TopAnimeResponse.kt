@@ -1,4 +1,4 @@
-package com.example.seekhoanimeapp.data.dto
+package com.example.seekhoanimeapp.data.network.dto
 
 data class TopAnimeResponse(
 val data: List<AnimeDto>
